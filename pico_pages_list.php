@@ -15,6 +15,7 @@ class Pico_Pages_List
 	private $pages_urls;
 	private $current_url;
 	private $base_url;
+	private $hide_list;
 
 
 	// HOOKS called by Pico ---------------
@@ -25,6 +26,7 @@ class Pico_Pages_List
 	public function config_loaded(&$settings)
 	{
 		$this->base_url = $settings['base_url'];
+		$this->hide_list = array_map('trim', explode(',', $settings['hide_pages']));
 	}
 
 	/**
@@ -54,7 +56,6 @@ class Pico_Pages_List
 
 	// CORE ---------------
 
-
 	/**
 	 * Create a nested array of the pages, according to their paths.
 	 * Merge all individual pages *nested_path*.
@@ -67,10 +68,8 @@ class Pico_Pages_List
 		array_multisort($this->pages_urls, SORT_ASC, $pages);
 		foreach ($pages as $page)
 		{
-			if($page['hide']) continue;
-
-			$page_path = substr($page['url'], strlen($this->base_url)+1);
-			$nested_path = $this->nested_path($page_path, $page);
+			$page['path'] = rtrim(str_replace($this->base_url.'/','',$page['url']), '/');
+			$nested_path = $this->nested_path($page);
 			$this->pages = array_merge_recursive($this->pages, $nested_path);
 		}
 	}
@@ -79,13 +78,12 @@ class Pico_Pages_List
 	 * Create a nested path of a given path, with page infos at the end.
 	 * Each path fragment is a "_child" of its parent fragment.
 	 *
-	 * @param  string $path the/page/relative/path
-	 * @param  array  $page the corresponding page data
+	 * @param  array  $page the corresponding page data, with 'path' key.
 	 * @return array        the nested path
 	 */
-	private function nested_path($path, $page)
+	private function nested_path($page)
 	{
-		$parts = explode('/', $path);
+		$parts = explode('/', $page['path']);
 		$count = count($parts);
 
 		$arr = array();
@@ -95,6 +93,7 @@ class Pico_Pages_List
 			if(!$part || $id == $count-1) {
 				$value = array(
 					'url'=>$page['url'],
+					'path'=>$page['path'],
 					'title'=>$page['title'],
 					'hide'=>$page['hide']
 				);
@@ -122,6 +121,8 @@ class Pico_Pages_List
 		$html = '<ul>';
 		foreach ($pages['_childs'] as $page)
 		{
+			if($this->is_hidden($page['path'])) continue;
+
 			$url = $page['url'];
 			$filename = basename($url);
 			$childs = $this->output($page);
@@ -140,6 +141,25 @@ class Pico_Pages_List
 		}
 		$html .= '</ul>';
 		return $html;
+	}
+
+	/**
+	 * Return if the given path had to be hidden or not.
+	 *
+	 * @param  string  $path the page short path
+	 * @return boolean
+	 */
+	private function is_hidden($path)
+	{
+		foreach($this->hide_list as $p)
+		{
+			if(	$path == $p ) return true;
+			if( strpos($path, $p) === 0 ) {
+				if( substr($p,-1) == '/' ) return true;
+				elseif( $path[strlen($p)] == '/' ) return true;
+			}
+		}
+		return false;
 	}
 }
 ?>
