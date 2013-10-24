@@ -69,8 +69,6 @@ Generates a clean nested html list, with links only if the page exists, using pa
 }
 ```
 
-Search for short and clean code.
+Search for short and clean source code.
 
-*The plugin will add per-page options only if it became possible to define custom
-page headers and access their values in `get_pages()` hook, and will not implements this
-functionality using site config file, as a design choice.*
+*The plugin will add server-side per-page options only if it became possible to define custom page headers and access their values in `get_pages()` hook, and will not implements this functionality using Pico config file, as a design choice. Basic filtering may use CSS hiding tough. *
