@@ -154,7 +154,7 @@ class Pico_Pages_List
 		foreach($this->hide_list as $p)
 		{
 			if( !$p ) continue;
-			if(	$path == $p ) return true;
+			if( $path == $p ) return true;
 			if( strpos($path, $p) === 0 ) {
 				if( substr($p,-1) == '/' ) return true;
 				elseif( $path[strlen($p)] == '/' ) return true;
