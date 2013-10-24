@@ -2,11 +2,11 @@
 
 A nested pages list plugin for the stupidly simple & blazing fast, flat file CMS [Pico](http://pico.dev7studios.com).
 
-## installation
+## Installation
 
 Copy `pico_pages_list.php` to the `plugins` directory of your Pico Project.
 
-## usage
+## Usage
 
 Add a generated nested pages list in your *theme* by using the following Twig variable :
 
@@ -15,11 +15,11 @@ Add a generated nested pages list in your *theme* by using the following Twig va
 You'll automatically get something like :
 
 * [A cool page]()
-* [untitled]()
 * [Sub-page is coming]()
 	* [The choosen one]()
-* I am not a page, just a path to the following page
-	* [A page]()
+	* category
+		* [A page]()
+* [untitled]()
 
 Under the hood :
 
@@ -28,33 +28,31 @@ Under the hood :
 	<li class="titled">
 		<a href="http://mysite.com/titled">A cool page</a>
 	</li>
-	<li class="untitled">
-		<a href="http://mysite.com/untitled">untitled</a>
-	</li>
-	<li class="foo-page parent">
+	<li class="foo-page is-parent">
 		<a href="http://mysite.com/foo-page">Sub-page is coming</a>
 		<ul>
-			<li class="child current">
+			<li class="child is-current">
 				<a href="http://mysite.com/foo-page/child">The choosen one</a>
+			</li>
+			<li class="category">
+				category
+				<ul>
+					<li class="bar">
+						<a href="http://mysite.com/category/bar">A page</a>
+					</li>
+				</ul>
 			</li>
 		</ul>
 	</li>
-	<li class="category">
-		category
-		<ul>
-			<li class="bar">
-				<a href="http://mysite.com/category/bar">A page</a>
-			</li>
-		</ul>
+	<li class="untitled">
+		<a href="http://mysite.com/untitled">untitled</a>
 	</li>
 </ul>
 ```
 
-## features
+## Features
 
-Display the page title if there is one, and a link if the page exists, or use the name.
-
-Generates a clean nested html list with handy css classes :
+Generates a clean nested html list, with links only if the page exists, using page titles for those who have one. Uses handy css classes :
 
 ```css
 #nav .foo-page a {
@@ -70,3 +68,9 @@ Generates a clean nested html list with handy css classes :
 	/* access to every parent item of the current one */
 }
 ```
+
+Search for short and clean code.
+
+*The plugin will add per-page options only if it became possible to define custom
+page headers and access their values in `get_pages()` hook, and will not implements this
+functionality using site config file, as a design choice.*
