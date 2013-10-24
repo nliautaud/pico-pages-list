@@ -52,7 +52,9 @@ Under the hood :
 
 ## Features
 
-Generates a clean nested html list, with links only if the page exists, using page titles for those who have one. Uses handy css classes :
+The plugin generate a clean nested html list, using links only if the page exists. The page title is used if possible.
+
+The lists items are defined by css classes allowing per-page or general manipulations :
 
 ```css
 #nav .foo-page a {
@@ -69,6 +71,8 @@ Generates a clean nested html list, with links only if the page exists, using pa
 }
 ```
 
-Search for short and clean source code.
+To exclude pages from the generated list, add to Pico config the setting `hide_pages`, and separate paths with commas. Childs of a path will be excluded with their parent :
 
-*The plugin will add server-side per-page options only if it became possible to define custom page headers and access their values in `get_pages()` hook, and will not implements this functionality using Pico config file, as a design choice. Basic filtering may use CSS hiding tough.*
+```php
+$config['hide_pages'] = 'this/page,all/in/here/';
+```
