@@ -18,7 +18,7 @@ class Pico_Pages_List
 	private $hide_list;
 
 
-	// HOOKS called by Pico ---------------
+	// Pico hooks ---------------
 
 	/**
 	 * Store the base url defined in Pico settings.
@@ -153,6 +153,7 @@ class Pico_Pages_List
 	{
 		foreach($this->hide_list as $p)
 		{
+			if( !$p ) continue;
 			if(	$path == $p ) return true;
 			if( strpos($path, $p) === 0 ) {
 				if( substr($p,-1) == '/' ) return true;
