@@ -130,7 +130,7 @@ class Pico_Pages_List
 			// use title if the page have one, and make a link if the page exists.
 			$item = !empty($page['title']) ? $page['title'] : $filename;
 			if(in_array($url, $this->pages_urls))
-				$item = '<a href="'.$url.'">'.$filename.'</a>';
+				$item = '<a href="'.$url.'">'.$item.'</a>';
 
 			// add the filename in class, and indicates if is current or parent
 			$class = $filename;
