@@ -71,7 +71,18 @@ The lists items are defined by css classes allowing per-page or general manipula
 }
 ```
 
-To exclude pages from the generated list, add to Pico config the setting `hide_pages`, and separate paths with commas. Childs of a path will be excluded with their parent :
+## Settings
+
+The settings are defined in the configuration file of Pico `config.php`.
+
+To sort the pages list, use the default settings :
+
+```php
+$config['pages_order_by'] = 'date';
+$config['pages_order'] = 'desc';
+```
+
+Exclude specific pages or directories with the setting `hide_pages`, by indicating pages or directory pathes separated by commas. Childs of a path will be excluded with their parent.
 
 ```php
 $config['hide_pages'] = 'this/page,all/in/here/';
