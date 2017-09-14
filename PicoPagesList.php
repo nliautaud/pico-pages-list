@@ -1,56 +1,93 @@
 <?php
 
 /**
- * A nested pages list plugin for the
- * stupidly simple & blazing fast, flat file CMS Pico.
+ * A nested pages list plugin for Pico CMS.
  *
- * @author	Nicolas Liautaud
- * @link	http://nliautaud.fr
- * @link    http://pico.dev7studios.com
- * @license http://opensource.org/licenses/MIT
+ * @author  Nicolas Liautaud
+ * @link    https://github.com/nliautaud/pico-pages-list
+ * @link    http://picocms.org
+ * @license http://opensource.org/licenses/MIT The MIT License
  */
-class Pico_Pages_List
+final class PicoPagesList extends AbstractPicoPlugin
 {
 	private $pages;
 	private $pages_urls;
 	private $current_url;
 	private $base_url;
 	private $hide_list;
-
-
-	// Pico hooks ---------------
+    
+    /**
+     * This plugin is enabled by default
+     *
+     * @see AbstractPicoPlugin::$enabled
+     * @var boolean
+     */
+    protected $enabled = true;
 
 	/**
-	 * Store the base url defined in Pico settings.
-	 */
-	public function config_loaded(&$settings)
+	 * Register Pico base url and hide_list config.
+	 *
+	 * Triggered after Pico has read its configuration
+     *
+     * @see    Pico::getConfig()
+     * @param  array &$config array of config variables
+     * @return void
+     */
+	public function onConfigLoaded(array &$config)
 	{
-		$this->base_url = $settings['base_url'];
-		$this->hide_list = array_map('trim', explode(',', $settings['hide_pages']));
+        $this->base_url = rtrim($config['base_url'], '/') . '/';
+		$this->hide_list = array_map('trim', explode(',', $config['hide_pages']));
 	}
 
 	/**
 	 * Store existing Pico pages urls, the current url
 	 * and construct the nested pages array.
-	 */
-	public function get_pages(&$pages, &$current_page, &$prev_page, &$next_page)
-	{
+	 *
+     * Triggered after Pico has read all known pages
+     *
+     * See {@link DummyPlugin::onSinglePageLoaded()} for details about the
+     * structure of the page data.
+     *
+     * @see    Pico::getPages()
+     * @see    Pico::getCurrentPage()
+     * @see    Pico::getPreviousPage()
+     * @see    Pico::getNextPage()
+     * @param  array[]    &$pages        data of all known pages
+     * @param  array|null &$currentPage  data of the page being served
+     * @param  array|null &$previousPage data of the previous page
+     * @param  array|null &$nextPage     data of the next page
+     * @return void
+     */
+    public function onPagesLoaded(
+        array &$pages,
+        array &$currentPage = null,
+        array &$previousPage = null,
+        array &$nextPage = null
+    ) {
 		$this->pages_urls = array();
 		foreach ($pages as $p) {
 			$this->pages_urls[] = $p['url'];
 		}
-
 		$this->pages = array();
-		$this->current_url = $current_page['url'];
+		$this->current_url = $currentPage['url'];
 		$this->construct_pages($pages);
 	}
 
 	/**
 	 * Register the html output in the Twig {{ pages_list }} variable.
-	 */
-	public function before_render(&$twig_vars, &$twig)
-	{
-		$twig_vars['pages_list'] = $this->output($this->pages);
+	 *
+     * Triggered before Pico renders the page
+     *
+     * @see    Pico::getTwig()
+     * @see    DummyPlugin::onPageRendered()
+     * @param  Twig_Environment &$twig          twig template engine
+     * @param  array            &$twigVariables template variables
+     * @param  string           &$templateName  file name of the template
+     * @return void
+     */
+    public function onPageRendering(Twig_Environment &$twig, array &$twigVariables, &$templateName)
+    {
+		$twigVariables['pages_list'] = $this->output($this->pages);
 	}
 
 
@@ -67,7 +104,7 @@ class Pico_Pages_List
 	{
 		foreach ($pages as $page)
 		{
-			$page['path'] = rtrim(str_replace($this->base_url.'/','',$page['url']), '/');
+			$page['path'] = rtrim(str_replace($this->base_url,'',$page['url']), '/');
 			$nested_path = $this->nested_path($page);
 			$this->pages = array_merge_recursive($this->pages, $nested_path);
 		}
@@ -118,7 +155,7 @@ class Pico_Pages_List
 		if(!isset($pages['_childs'])) return '';
 
 		$html = '<ul>';
-		foreach ($pages['_childs'] as $page)
+		foreach ($pages['_childs'] as $key => $page)
 		{
 			if($this->is_hidden($page['path'])) continue;
 
@@ -127,8 +164,8 @@ class Pico_Pages_List
 			$childs = $this->output($page);
 
 			// use title if the page have one, and make a link if the page exists.
-			$item = !empty($page['title']) ? $page['title'] : $filename;
-			if(in_array($url, $this->pages_urls))
+			$item = !empty($page['title']) ? $page['title'] : ($filename ? $filename : $key);
+			if($url && in_array($url, $this->pages_urls))
 				$item = '<a href="'.$url.'">'.$item.'</a>';
 
 			// add the filename in class, and indicates if is current or parent
