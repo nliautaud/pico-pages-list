@@ -8,7 +8,7 @@
  * @link    http://picocms.org
  * @license http://opensource.org/licenses/MIT The MIT License
  */
-final class PicoPagesList extends AbstractPicoPlugin
+class PicoPagesList extends AbstractPicoPlugin
 {
     private $pages;
     private $pages_urls;
