@@ -17,14 +17,6 @@ final class PicoPagesList extends AbstractPicoPlugin
 	private $hide_list;
     
     /**
-     * This plugin is enabled by default
-     *
-     * @see AbstractPicoPlugin::$enabled
-     * @var boolean
-     */
-    protected $enabled = true;
-
-	/**
 	 * Register Pico base url and hide_list config.
 	 *
 	 * Triggered after Pico has read its configuration
