@@ -1,5 +1,4 @@
 <?php
-
 /**
  * A nested pages list plugin for Pico CMS.
  *
@@ -10,30 +9,12 @@
  */
 class PicoPagesList extends AbstractPicoPlugin
 {
-    private $pages;
-    private $pages_urls;
-    private $current_url;
+    public $items;
     private $base_url;
-    private $hide_list;
+    private $current_url;
 
     /**
-     * Register Pico base url and hide_list config.
-     *
-     * Triggered after Pico has read its configuration
-     *
-     * @see    Pico::getConfig()
-     * @param  array &$config array of config variables
-     * @return void
-     */
-    public function onConfigLoaded(array &$config)
-    {
-        $this->base_url = rtrim($config['base_url'], '/') . '/';
-        $this->hide_list = array_map('trim', explode(',', $config['hide_pages']));
-    }
-
-    /**
-     * Store existing Pico pages urls, the current url
-     * and construct the nested pages array.
+     * Store the current url and construct the nested pages array.
      *
      * Triggered after Pico has read all known pages
      *
@@ -56,17 +37,12 @@ class PicoPagesList extends AbstractPicoPlugin
         array &$previousPage = null,
         array &$nextPage = null
     ) {
-        $this->pages_urls = array();
-        foreach ($pages as $p) {
-            $this->pages_urls[] = $p['url'];
-        }
-        $this->pages = array();
         $this->current_url = $currentPage['url'];
         $this->construct_pages($pages);
     }
 
     /**
-     * Register the html output in the Twig {{ pages_list }} variable.
+     * Register `$this` in the Twig `{{ PagesList }}` variable.
      *
      * Triggered before Pico renders the page
      *
@@ -79,39 +55,38 @@ class PicoPagesList extends AbstractPicoPlugin
      */
     public function onPageRendering(Twig_Environment &$twig, array &$twigVariables, &$templateName)
     {
-        $twigVariables['pages_list'] = $this->output($this->pages);
+        $twigVariables['PagesList'] = $this;
+        $twigVariables['pages_list'] = $this->html(); // backward compatibility
     }
 
-
-    // CORE ---------------
-
     /**
-     * Create a nested array of the pages, according to their paths.
-     * Merge all individual pages *nested_path*.
+     * Create the nested pages array according to the pages paths.
      *
      * @see    nested_path
      * @param  array $pages Pico pages flat array
      */
     private function construct_pages($pages)
     {
-        foreach ($pages as $page)
-        {
-            $page['path'] = rtrim(str_replace($this->base_url,'',$page['url']), '/');
+        $this->base_url = $this->getConfig('base_url');
+        $this->items = array();
+        foreach ($pages as $page) {
             $nested_path = $this->nested_path($page);
-            $this->pages = array_merge_recursive($this->pages, $nested_path);
+            $this->items = array_merge_recursive($this->items, $nested_path);
         }
     }
 
     /**
-     * Create a nested path of a given path, with page infos at the end.
-     * Each path fragment is a "_child" of its parent fragment.
+     * Create a nested array of a given path, with the page at the end.
+     * Each path fragment is in "_childs" of the parent.
      *
-     * @param  array  $page the corresponding page data, with 'path' key.
-     * @return array        the nested path
+     * @param  array  $page the page array
+     * @param  array  $base_url the base url, substracted from the page url
+     * @return array  the nested path relative to $base_url
      */
     private function nested_path($page)
     {
-        $parts = explode('/', $page['path']);
+        $path = rtrim(str_replace($this->base_url, '', $page['url']), '/');
+        $parts = explode('/', $path);
         $count = count($parts);
 
         $arr = array();
@@ -119,12 +94,7 @@ class PicoPagesList extends AbstractPicoPlugin
         foreach($parts as $id => $part) {
             $value = array();
             if(!$part || $id == $count-1) {
-                $value = array(
-                    'url'=>$page['url'],
-                    'path'=>$page['path'],
-                    'title'=>$page['title'],
-                    'hide'=>$page['hide']
-                );
+                $value = $page;
             }
             if(!$part) {
                 $parent = $value;
@@ -137,35 +107,57 @@ class PicoPagesList extends AbstractPicoPlugin
     }
 
     /**
-     * Create an html list based on the nested pages array.
+     * Render a nested html list of pages.
+     *
+     * @param  array|string  $paths array or comma-separated list of pages paths to filter
+     * @param  boolean  $exclude if true render all but the given paths
+     * @return string the html list
+     */
+    public function html($paths = array(), $exclude = false)
+    {
+        if (!is_array($paths)) $paths = explode(',', $paths);
+        return $this->output($this->items, $paths, $exclude);
+    }
+
+    /**
+     * Return an html nested list based on a nested pages array.
      *
      * @param  array  $pages a nested pages array
-     * @return string        the html list
+     * @param  array  $paths_filters array of paths to keep or skip
+     * @param  string  $currentPath the current walked path
+     * @return string the html list
      */
-    private function output($pages)
+    private function output($pages, $paths_filters, $isFilterExcluding, $currentPath = '')
     {
-        if(!isset($pages['_childs'])) return '';
-
+        if(!$pages['_childs']) return;
         $html = '<ul>';
-        foreach ($pages['_childs'] as $key => $page)
+        foreach ($pages['_childs'] as $pageID => $page)
         {
-            if($this->is_hidden($page['path'])) continue;
+            $childPath = $currentPath ? $currentPath.'/'.$pageID : $pageID;
 
-            $url = $page['url'];
-            $filename = basename($url);
-            $childs = $this->output($page);
+            $is_filtered = $this->isConcerned($childPath, $paths_filters);
+            if($is_filtered && $isFilterExcluding) continue;
+            if($paths_filters && !$is_filtered && !$isFilterExcluding) continue;
+
+            $childs = $this->output($page, $paths_filters, $childPath);
+
+            $url = isset($page['url']) ? $page['url'] : false;
 
             // use title if the page have one, and make a link if the page exists.
-            $item = !empty($page['title']) ? $page['title'] : ($filename ? $filename : $key);
-            if($url && in_array($url, $this->pages_urls))
-                $item = '<a href="'.$url.'">'.$item.'</a>';
+            if(!$url) $item = "<span>$pageID</span>";
+            else {
+                $name = !empty($page['title']) ? $page['title'] : $pageID;
+                $item = "<a href=\"$url\">$name</a>";
+            }
 
-            // add the filename in class, and indicates if is current or parent
-            $class = $filename;
-            if($this->current_url == $url) $class .= ' is-current';
-            elseif(strpos($this->current_url, $url) === 0) $class .= ' is-parent';
+            // add the pageID in class, and indicates if is current or parent of current
+            $class = $pageID;
+            $class .= $url ? ' is-page' : ' is-directory';
+            if ($childs) $class .= ' has-childs';
+            if ($this->current_url == $url) $class .= ' is-current';
+            if (strpos($this->current_url, $this->base_url . $childPath) === 0) $class .= ' is-active';
 
-            $html .= '<li class="'.$class.'">' . $item . $childs . '</li>';
+            $html .= "<li class=\"$class\">$item$childs</li>";
         }
         $html .= '</ul>';
         return $html;
@@ -177,9 +169,9 @@ class PicoPagesList extends AbstractPicoPlugin
      * @param  string  $path the page short path
      * @return boolean
      */
-    private function is_hidden($path)
+    private static function isConcerned($path, $excluded_paths)
     {
-        foreach($this->hide_list as $p)
+        foreach($excluded_paths as $p)
         {
             if( !$p ) continue;
             if( $path == $p ) return true;
