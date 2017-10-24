@@ -1,0 +1,95 @@
+<h2>Demo for <a href="https://github.com/nliautaud/pico-pages-list">pico-pages-list</a></h2>
+<p>Place me in <code>themes/mytheme/</code> and include me before content with <code>{% raw %}{% include 'demo.twig' %}{% endraw %}</code>.
+<style>
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+  .demo code {
+    font-family: inherit;
+    border: 1px solid silver;
+    border-radius: 3px;
+    background: transparent;
+    padding: 1px 3px 2px;
+    font-size: .8em;
+  }
+  .demo ul {
+    list-style: none;
+    padding: 0;
+  }
+  .demo ul ul {
+    padding-left: 1.5em;
+    margin: 0;
+  }
+  .demo .is-active a {
+    font-style: italic;
+  }
+  .demo .is-current a {
+    font-style: normal;
+    font-weight: bold;
+  }
+  .demo a::before,
+  .demo span::before {
+    content: "▹";
+    vertical-align: middle;
+    margin-right: .5em;
+    color: grey;
+    font: normal 1.2em normal mono; 
+  }
+  .demo .has-childs > a::before,
+  .demo .has-childs > span::before {
+    content: "▾"; 
+  }
+</style>
+<div class="demo">
+  <div class="grid">
+    <div>
+      <code>{% raw %}{{ pages | navigation }}{% endraw %}</code>
+      {{ pages | navigation }}
+    </div>
+    <div>
+      <code>{% raw %}{{ nested_pages | navigation }}{% endraw %}</code>
+      {{ nested_pages | navigation }}
+    </div>
+    <div>
+      <code>{% raw %}{{ nested_pages | exclude('doc') | navigation }}{% endraw %}</code>
+      {{ nested_pages | exclude('doc') | navigation }}
+    </div>
+    <div>
+      <code>{% raw %}{{ nested_pages | exclude('doc/') | navigation }}{% endraw %}</code>
+      {{ nested_pages | exclude('doc/') | navigation }}
+    </div>
+    <div>
+      <code>{% raw %}{{ nested_pages | only('doc') | exclude('doc/sub/bar') | navigation }}{% endraw %}</code>
+      {{ nested_pages | only('doc') | exclude('doc/sub/bar') | navigation }}
+    </div>
+    <div>
+      <code>{% raw %}{{ nested_pages | only('doc/sub,index') | navigation }}{% endraw %}</code>
+      {{ nested_pages | only('doc/sub,index') | navigation }}
+    </div>
+  </div>
+
+  <hr>
+  <p>Custom loop :</p>
+
+  {% macro menu(items) %}
+    <ul>
+    {% for name,item in items %}
+      <li>
+        {% if item.url %}
+          <a href="{{ item.url }}">{{ item.title }}</a> : {{ item.description }}
+        {% else %}
+          <span>{{ name }}</span>
+        {% endif %}
+        {% if item._childs %}
+          {% import _self as macros %}
+          {{ macros.menu(item._childs) }}
+        {% endif %}
+      </li>
+    {% endfor %}
+    </ul>
+  {% endmacro %}
+
+  {% import _self as macros %}
+  {{ macros.menu(nested_pages) }}
+</div>
