@@ -1,6 +1,10 @@
 # Pico Pages List
 
-A nested pages list plugin for [Pico CMS](http://picocms.org).
+A flat and nested pages lists plugin for [Pico CMS](http://picocms.org).
+
+The plugin adds `{{ nested_pages }}` in addition to `{{ pages }}`, the filters `exclude` and `only` that filters page arrays and the filter `navigation` which render flat or nested HTML navigations with links and utility css classes.
+
+![Examples](examples/capture.png)
 
 ## Installation
 
@@ -8,13 +12,13 @@ Copy `PicoPagesList.php` to the `plugins` directory of your Pico Project.
 
 ## Usage
 
-Add a nested navigation in your theme by using the following Twig command :
+Create a nested HTML navigation tree with :
 
 ```twig
-{{ PagesList.html }}
+{{ nested_pages | navigation }}
 ```
 
-You'll automatically get something like :
+The nested navigation will look like that :
 
 * [A cool page]()
 * [Sub-page is coming]()
@@ -22,6 +26,35 @@ You'll automatically get something like :
 	* category
 		* [A page]()
 * [untitled]()
+
+The global `nested_pages` and the filter `navigation` render an HTML navigation. Works on `{{ pages }}` too.
+
+```twig
+{{ pages | navigation }} // output a flat pages list
+```
+
+## Filtering
+
+The plugin create two additionnal Twig filters, `exclude()` and `only()`, that filters the given pages array (`pages` or `nested_pages`) by paths.
+
+```twig
+pages | exclude('path/')    // exclude the page located under "path/"
+pages | only('path/')       // return only the page located at "path/"
+```
+
+Use the leading slath to target index pages or not.
+
+```twig
+pages | exclude('sub/dir/')     // exclude the page located under "sub/dir/", but not "sub/dir" (index)
+pages | exclude('sub/dir')      // exclude "sub/dir" (index) and pages located under "sub/dir/" 
+```
+
+You can specify multiple paths at once by using an array or a comma-separated string.
+
+```twig
+exclude('sub/dir,page')
+exclude(['sub/dir', 'page'])
+```
 
 ### Styling
 
@@ -76,56 +109,33 @@ As a simple example, you may show sub-pages only if their parent is active :
 }
 ```
 
-### Filtering output
-
-You can target or exclude specific paths from the output with `PagesList.html()` parameters.
-
-```twig
-{{ PagesList.html(paths, exclude) }}
-
-{{ PagesList.html }}  // all
-{{ PagesList.html('foo/bar') }}  // only foo/bar childs
-{{ PagesList.html('foo/bar', true) }}  // all except foo/bar childs
-```
-
-You can specify multiple paths by using an array or a comma-separated string.
-
-```twig
-// filter multiple paths
-{{ PagesList.html('foo/bar,other') }}
-{{ PagesList.html(['foo/bar', 'other']) }}
-```
-
 ## Custom loop
 
-You can access the items within `PagesList.items`.
+The `{{ nested_pages }}` global is an array of pages, similar to `{{ pages }}`, where sub-pages are nested into `_childs`.
 
-Every item may contain child entries in `_childs`, so you may want a recursive Twig template or macro to walk trough it.
+You may want a recursive Twig template or macro to walk trough it, for example :
 
 ```twig
-{% macro menu(item) %}
-    {% import _self as macros %}
-    {% for name,child in item._childs %}
-        <li>
-            {% if child.url %}
-              <a href="{{ child.url }}">{{ child.title }}</a>
-            {% else %}
-              <span>{{ name }}</span>
-            {% endif %}
-            {% if child._childs %}
-            <ul>
-                {{ macros.menu(child) }}
-            </ul>
-            {% endif %}
-        </li>
-    {% endfor %}
+{% macro menu(items) %}
+  <ul>
+  {% for name,item in items %}
+    <li>
+      {% if item.url %}
+        <a href="{{ item.url }}">{{ item.title }}</a> : {{ item.description }}
+      {% else %}
+        <span>{{ name }}</span>
+      {% endif %}
+      {% if item._childs %}
+        {% import _self as macros %}
+        {{ macros.menu(item._childs) }}
+      {% endif %}
+    </li>
+  {% endfor %}
+  </ul>
 {% endmacro %}
 
 {% import _self as macros %}
-
-<ul class="main-menu">
-    {{ macros.menu(PagesList.items) }}
-</ul>
+{{ macros.menu(nested_pages) }}
 ```
 
 ## Settings
