@@ -86,6 +86,7 @@ class PicoPagesList extends AbstractPicoPlugin
     private function nested_path($page)
     {
         $path = rtrim(str_replace($this->base_url, '', $page['url']), '/');
+        $path = rtrim($path, '/index');
         $parts = explode('/', $path);
         $count = count($parts);
 
