@@ -71,11 +71,25 @@ class PicoPagesList extends AbstractPicoPlugin
             return $this->output($pages);
         }));
         $twig->addFilter(new Twig_SimpleFilter('exclude', function($pages, $paths) {
+            $paths = self::pathsParam($paths);
             return $this->filterPages($pages, $paths);
         }));
         $twig->addFilter(new Twig_SimpleFilter('only', function($pages, $paths) {
+            $paths = self::pathsParam($paths);
             return $this->filterPages($pages, $paths, true);
         }));
+    }
+
+    /**
+     * Setup `exclude` and `only` filters parameters to be an array.
+     *
+     * @param string|array $paths The paths as comma-separated string or array.
+     * @return array The array of paths.
+     */
+    private static function pathsParam($paths = [])
+    {
+        if(!is_array($paths)) return explode(',', $paths);
+        return $paths;
     }
 
     /**
@@ -146,26 +160,33 @@ class PicoPagesList extends AbstractPicoPlugin
      * Filter the pages array according to given paths, as exclusive or inclusive.
      *
      * @param array $pages The flat or nested pages array.
-     * @param string|array $filteredPaths The filtered paths, as comma-separated or array.
-     * @param boolean $inclusive Use inclusive : only corresponding paths are kept.
+     * @param array $filteredPaths The paths to filter.
+     * @param boolean $isInclusive If `true` only corresponding paths are kept.
      * @return array The filtered array of pages.
      */
-    public static function filterPages($pages, $filteredPaths, $inclusive = false)
-    {
+    public static function filterPages(
+        $pages,
+        $filteredPaths,
+        $isInclusive = false,
+        $inclusiveOutput = []
+    ) {
         foreach($pages as $i => $page) {
             if (!isset($page['id'])) return;
 
             $path = self::rtrim($page['id'], '/index');
             $isSubPath = self::isSubPath($path, $filteredPaths);
-            if (($isSubPath && !$inclusive) || (!$isSubPath && $inclusive)) {
-                unset($pages[$i]);
+            if ($isSubPath) {
+                if ($isInclusive) $inclusiveOutput[$i] = $page;
+                else unset($pages[$i]);
                 continue;
             }
             if (isset($page['_childs'])) {
-                $pages[$i]['_childs'] = self::filterPages($page['_childs'], $filteredPaths, $inclusive);
+                $childs = self::filterPages($page['_childs'], $filteredPaths, $isInclusive, $inclusiveOutput);
+                if ($isInclusive) $inclusiveOutput = $childs;
+                else $pages[$i]['_childs'] = $childs;
             }
         }
-        return $pages;
+        return $isInclusive ? $inclusiveOutput : $pages;
     }
     /**
      * Return if the given path is a subpath of the given parent path(s)
@@ -176,9 +197,6 @@ class PicoPagesList extends AbstractPicoPlugin
      */
     private static function isSubPath($path, $parentPaths)
     {
-        if (!is_array($parentPaths))
-            $parentPaths = explode(',', $parentPaths);
-            
         foreach($parentPaths as $p) {
             if ($path == $p) return true;
             if (strncmp($path, $p, strlen($p)) === 0)
