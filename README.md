@@ -4,14 +4,8 @@ A flat and nested pages lists plugin for [Pico CMS](http://picocms.org).
 
 The plugin adds `{{ nested_pages }}` in addition to `{{ pages }}`, the filters `exclude` and `only` that filters page arrays and the filter `navigation` which render flat or nested HTML navigations with links and utility css classes.
 
-Examples : 
+![Examples](examples/capture.png)
 
-```twig
-{{ pages | navigation }} // output a flat pages navigation
-{{ nested_pages | navigation }} // output a nested pages navigation
-{{ nested_pages | exclude('sub/page') | navigation }} // output a filtered nested pages navigation
-{% assign filtered = pages | only('sub/path/') %} // get filtered flat pages list
-```
 ## Installation
 
 Copy `PicoPagesList.php` to the `plugins` directory of your Pico Project.
@@ -122,29 +116,26 @@ The `{{ nested_pages }}` global is an array of pages, similar to `{{ pages }}`, 
 You may want a recursive Twig template or macro to walk trough it, for example :
 
 ```twig
-{% macro menu(item) %}
+{% macro menu(items) %}
+  <ul>
+  {% for name,item in items %}
     <li>
-    {% if item.url %}
-        <a href="{{ item.url }}">{{ item.title }}</a>
-    {% else %}
+      {% if item.url %}
+        <a href="{{ item.url }}">{{ item.title }}</a> : {{ item.description }}
+      {% else %}
         <span>{{ name }}</span>
-    {% endif %}
-    {% if item._childs %}
+      {% endif %}
+      {% if item._childs %}
         {% import _self as macros %}
-        <ul>
-            {% for name,child in item._childs %}
-                {{ macros.menu(child) }}
-            {% endfor %}
-        </ul>
-    {% endif %}
+        {{ macros.menu(item._childs) }}
+      {% endif %}
     </li>
+  {% endfor %}
+  </ul>
 {% endmacro %}
 
 {% import _self as macros %}
-
-<ul class="main-menu">
-    {{ macros.menu(nested_pages) }}
-</ul>
+{{ macros.menu(nested_pages) }}
 ```
 
 ## Settings
