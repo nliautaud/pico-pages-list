@@ -66,30 +66,19 @@ class PicoPagesList extends AbstractPicoPlugin
      */
     public function onPageRendering(Twig_Environment &$twig, array &$twigVariables, &$templateName)
     {
-        $twig->addGlobal('nested_pages', $this->items);
+        $twigVariables['nested_pages'] = $this->items;
+        
         $twig->addFilter(new Twig_SimpleFilter('navigation', function($pages) {
             return $this->output($pages);
         }));
-        $twig->addFilter(new Twig_SimpleFilter('exclude', function($pages, $paths) {
-            $paths = self::pathsParam($paths);
-            return $this->filterPages($pages, $paths);
-        }));
-        $twig->addFilter(new Twig_SimpleFilter('only', function($pages, $paths) {
-            $paths = self::pathsParam($paths);
-            return $this->filterPages($pages, $paths, true);
-        }));
-    }
 
-    /**
-     * Setup `exclude` and `only` filters parameters to be an array.
-     *
-     * @param string|array $paths The paths as comma-separated string or array.
-     * @return array The array of paths.
-     */
-    private static function pathsParam($paths = [])
-    {
-        if(!is_array($paths)) return explode(',', $paths);
-        return $paths;
+        $twig->addFilter(new Twig_SimpleFilter('exclude', function($pages, array $paths = array()) {
+            return $this->filterPages($pages, $paths);
+        }, array('is_variadic' => true)));
+
+        $twig->addFilter(new Twig_SimpleFilter('only', function($pages, array $paths = array()) {
+            return $this->filterPages($pages, $paths, true);
+        }, array('is_variadic' => true)));
     }
 
     /**
@@ -153,7 +142,8 @@ class PicoPagesList extends AbstractPicoPlugin
      */
     private static function rtrim($str, $substr)
     {
-        return preg_replace('#'.preg_quote($substr, '#').'$#', '', $str);
+        $length = strlen($substr);
+        return (substr($str, -$length) === $substr) ? substr($str, 0, -$length) : $str;
     }
     
     /**
@@ -198,6 +188,7 @@ class PicoPagesList extends AbstractPicoPlugin
     private static function isSubPath($path, $parentPaths)
     {
         foreach($parentPaths as $p) {
+            if (!is_string($p)) continue;
             if ($path == $p) return true;
             if (strncmp($path, $p, strlen($p)) === 0)
                 return true;
