@@ -142,7 +142,7 @@ You may want a recursive Twig template or macro to walk trough it, for example :
 
 The lists are sorted according to the default settings in Pico `config.php`.
 
-```php
-$config['pages_order_by'] = 'date';
-$config['pages_order'] = 'desc';
+```yml
+pages_order_by: date
+pages_order: desc
 ```
