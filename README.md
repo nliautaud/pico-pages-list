@@ -46,14 +46,14 @@ Use the leading slath to target index pages or not.
 
 ```twig
 pages | exclude('sub/dir/')     // exclude the page located under "sub/dir/", but not "sub/dir" (index)
-pages | exclude('sub/dir')      // exclude "sub/dir" (index) and pages located under "sub/dir/" 
+pages | exclude('sub/dir')      // exclude "sub/dir" (index) and pages located under "sub/dir/"
 ```
 
-You can specify multiple paths at once by using an array or a comma-separated string.
+You can specify multiple paths at once by using multiple arguments.
 
 ```twig
-exclude('sub/dir,page')
-exclude(['sub/dir', 'page'])
+exclude('sub/dir', 'page')
+only('sub/dir', 'page')
 ```
 
 ### Styling
