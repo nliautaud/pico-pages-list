@@ -210,6 +210,8 @@ class PicoPagesList extends AbstractPicoPlugin
         $html = '<ul>';
         foreach ($pages as $pageID => $page)
         {
+            if (!empty($page['hidden'])) continue;
+
             $childPath = $currentPath ? $currentPath.'/'.$pageID : $pageID;
 
             $childsOutput = '';
