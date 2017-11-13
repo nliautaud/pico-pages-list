@@ -20,6 +20,7 @@
  */
 class PicoPagesList extends AbstractPicoPlugin
 {
+    const API_VERSION = 2;
     public $items;
     private $currentPagePath;
 
@@ -59,13 +60,13 @@ class PicoPagesList extends AbstractPicoPlugin
      *
      * @see    Pico::getTwig()
      * @see    DummyPlugin::onPageRendered()
-     * @param  Twig_Environment &$twig          twig template engine
-     * @param  array            &$twigVariables template variables
      * @param  string           &$templateName  file name of the template
+     * @param  array            &$twigVariables template variables
      * @return void
      */
-    public function onPageRendering(Twig_Environment &$twig, array &$twigVariables, &$templateName)
+    public function onPageRendering(string &$templateName, array &$twigVariables)
     {
+        $twig = $this->getPico()->getTwig();
         $twigVariables['nested_pages'] = $this->items;
         
         $twig->addFilter(new Twig_SimpleFilter('navigation', function($pages) {
@@ -124,7 +125,7 @@ class PicoPagesList extends AbstractPicoPlugin
                 $parent = $value;
                 break;
             }
-            
+
             $parent['_childs'][$part] = $value;
             $parent = &$parent['_childs'][$part];
         }
@@ -143,7 +144,7 @@ class PicoPagesList extends AbstractPicoPlugin
         $length = strlen($substr);
         return (substr($str, -$length) === $substr) ? substr($str, 0, -$length) : $str;
     }
-    
+
     /**
      * Filter the pages array according to given paths, as exclusive or inclusive.
      *
@@ -233,4 +234,3 @@ class PicoPagesList extends AbstractPicoPlugin
         return $html;
     }
 }
-?>
