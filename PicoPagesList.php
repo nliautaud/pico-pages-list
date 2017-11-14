@@ -21,8 +21,7 @@
 class PicoPagesList extends AbstractPicoPlugin
 {
     public $items;
-    private $base_url;
-    private $current_url;
+    private $currentPagePath;
 
     /**
      * Store the current url and construct the nested pages array.
@@ -48,7 +47,8 @@ class PicoPagesList extends AbstractPicoPlugin
         array &$previousPage = null,
         array &$nextPage = null
     ) {
-        $this->current_url = $currentPage['url'];
+        $base_url = $this->getConfig('base_url');
+        $this->currentPagePath = str_replace(array('?', $base_url), '', urldecode($currentPage['url']));
         $this->items = $this->nestedPages($pages);
     }
 
@@ -89,7 +89,6 @@ class PicoPagesList extends AbstractPicoPlugin
      */
     private function nestedPages($pages)
     {
-        $this->base_url = $this->getConfig('base_url');
         $this->items = array();
         foreach ($pages as $page) {
             $nested_path = $this->nested_path($page);
@@ -103,8 +102,7 @@ class PicoPagesList extends AbstractPicoPlugin
      * Each path fragment is in "_childs" of the parent.
      *
      * @param  array  $page the page array
-     * @param  array  $base_url the base url, substracted from the page url
-     * @return array  the nested path relative to $base_url
+     * @return array  the nested path
      */
     private function nested_path($page)
     {
@@ -182,7 +180,7 @@ class PicoPagesList extends AbstractPicoPlugin
      * Return if the given path is a subpath of the given parent path(s)
      *
      * @param  string  $path
-     * @param  mixed  $excludedPaths a path, an array of paths or pathes separated by commas
+     * @param  array  $parentPaths array of paths
      * @return boolean
      */
     private static function isSubPath($path, $parentPaths)
@@ -200,11 +198,9 @@ class PicoPagesList extends AbstractPicoPlugin
      * Return an html nested list based on a nested pages array.
      *
      * @param  array  $pages a nested pages array
-     * @param  array  $paths_filters array of paths to keep or skip
-     * @param  string  $currentPath the current walked path
      * @return string the html list
      */
-    private function output($pages, $currentPath = '')
+    private function output($pages)
     {
         if (!is_array($pages)) return;
         $html = '<ul>';
@@ -212,11 +208,9 @@ class PicoPagesList extends AbstractPicoPlugin
         {
             if (!empty($page['hidden'])) continue;
 
-            $childPath = $currentPath ? $currentPath.'/'.$pageID : $pageID;
-
             $childsOutput = '';
             if(isset($page['_childs'])) {
-                $childsOutput = $this->output($page['_childs'], $childPath);
+                $childsOutput = $this->output($page['_childs']);
             }
 
             $url = isset($page['url']) ? $page['url'] : false;
@@ -232,8 +226,8 @@ class PicoPagesList extends AbstractPicoPlugin
             $class = $pageID;
             $class .= $url ? ' is-page' : ' is-directory';
             if ($childsOutput) $class .= ' has-childs';
-            if ($this->current_url == $url) $class .= ' is-current';
-            if (strpos($this->current_url, $this->base_url . $childPath) === 0) $class .= ' is-active';
+            if ($this->currentPagePath == $page['id']) $class .= ' is-current';
+            if (strpos($this->currentPagePath, $page['id']) === 0) $class .= ' is-active';
 
             $html .= "<li class=\"$class\">$item$childsOutput</li>";
         }
