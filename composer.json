@@ -1,0 +1,30 @@
+{
+  "name": "nliautaud/pico-pages-list",
+  "type": "pico-plugin",
+  "description": "A pages lists plugin for Pico CMS, with nested pages, pages filtering and HTML navigation.",
+  "keywords": [ "pico", "picocms", "picocms-plugin", "pico-pages-list"],
+  "homepage": "http://picocms.org/",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Nicolas Liautaud",
+      "homepage": "https://github.com/nliautaud/pico-pages-list",
+      "role": "Lead Developer"
+    },
+    {
+      "name": "Contributors",
+      "homepage": "https://github.com/nliautaud/pico-pages-list/graphs/contributors"
+    }
+  ],
+  "support": {
+    "docs": "https://github.com/nliautaud/pico-pages-list/blob/master/README.md",
+    "issues": "https://github.com/nliautaud/pico-pages-list/issues",
+    "source": "https://github.com/nliautaud/pico-pages-list"
+  },
+  "require": {
+    "php": ">=5.4.0"
+  },
+  "autoload": {
+    "classmap": [ "PicoPagesList.php" ]
+  }
+}
