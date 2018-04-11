@@ -25,7 +25,7 @@ class PicoPagesList extends AbstractPicoPlugin
     private $currentPagePath;
 
     /**
-     * Store the current url and construct the nested pages array.
+     * Construct the nested pages array.
      *
      * Triggered after Pico has read all known pages
      *
@@ -33,24 +33,38 @@ class PicoPagesList extends AbstractPicoPlugin
      * structure of the page data.
      *
      * @see    Pico::getPages()
+     * @param  array[] &$pages data of all known pages
+     * @return void
+     */
+    public function onPagesLoaded(array &$pages)
+    {
+        $this->items = $this->nestedPages($pages);
+    }
+
+
+    /**
+     * Store the current url.
+     *
+     * Triggered after Pico has found the current page and possible siblings
+     *
+     * See {@link DummyPlugin::onSinglePageLoaded()} for details about the
+     * structure of the page data.
+     *
      * @see    Pico::getCurrentPage()
      * @see    Pico::getPreviousPage()
      * @see    Pico::getNextPage()
-     * @param  array[]    &$pages        data of all known pages
      * @param  array|null &$currentPage  data of the page being served
      * @param  array|null &$previousPage data of the previous page
      * @param  array|null &$nextPage     data of the next page
      * @return void
      */
-    public function onPagesLoaded(
-        array &$pages,
+    protected function onCurrentPageDiscovered(
         array &$currentPage = null,
         array &$previousPage = null,
-        array &$nextPage = null
-    ) {
+        array &$nextPage = null)
+    {
         $base_url = $this->getConfig('base_url');
         $this->currentPagePath = str_replace(array('?', $base_url), '', urldecode($currentPage['url']));
-        $this->items = $this->nestedPages($pages);
     }
 
     /**
