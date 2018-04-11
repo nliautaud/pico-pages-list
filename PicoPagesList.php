@@ -61,7 +61,8 @@ class PicoPagesList extends AbstractPicoPlugin
     protected function onCurrentPageDiscovered(
         array &$currentPage = null,
         array &$previousPage = null,
-        array &$nextPage = null) {
+        array &$nextPage = null
+    ) {
         $base_url = $this->getConfig('base_url');
         $this->currentPagePath = str_replace(array('?', $base_url), '', urldecode($currentPage['url']));
     }
