@@ -1,13 +1,13 @@
 <?php
 /**
  * Flat and nested pages list navigation for Pico CMS.
- * 
+ *
  * - Adds twig global `{{ nested_pages }}` in addition to `{{ pages }}`
  * - Render flat or nested HTML navigation tree with `navigation` twig filter
  * - Filter pages and nested pages by paths with `exclude()` and `only()` twig filters
- * 
+ *
  * Examples :
- * 
+ *
  *     {{ pages | navigation }} // output a flat pages list
  *     {{ nested_pages | navigation }} // output a nested pages list
  *     {{ nested_pages | exclude('sub/page') | navigation }} // filtered nested pages list
@@ -20,11 +20,12 @@
  */
 class PicoPagesList extends AbstractPicoPlugin
 {
+    const API_VERSION = 2;
     public $items;
     private $currentPagePath;
 
     /**
-     * Store the current url and construct the nested pages array.
+     * Construct the nested pages array.
      *
      * Triggered after Pico has read all known pages
      *
@@ -32,24 +33,38 @@ class PicoPagesList extends AbstractPicoPlugin
      * structure of the page data.
      *
      * @see    Pico::getPages()
+     * @param  array[] &$pages data of all known pages
+     * @return void
+     */
+    public function onPagesLoaded(array &$pages)
+    {
+        $this->items = $this->nestedPages($pages);
+    }
+
+
+    /**
+     * Store the current url.
+     *
+     * Triggered after Pico has found the current page and possible siblings
+     *
+     * See {@link DummyPlugin::onSinglePageLoaded()} for details about the
+     * structure of the page data.
+     *
      * @see    Pico::getCurrentPage()
      * @see    Pico::getPreviousPage()
      * @see    Pico::getNextPage()
-     * @param  array[]    &$pages        data of all known pages
      * @param  array|null &$currentPage  data of the page being served
      * @param  array|null &$previousPage data of the previous page
      * @param  array|null &$nextPage     data of the next page
      * @return void
      */
-    public function onPagesLoaded(
-        array &$pages,
+    protected function onCurrentPageDiscovered(
         array &$currentPage = null,
         array &$previousPage = null,
         array &$nextPage = null
     ) {
         $base_url = $this->getConfig('base_url');
         $this->currentPagePath = str_replace(array('?', $base_url), '', urldecode($currentPage['url']));
-        $this->items = $this->nestedPages($pages);
     }
 
     /**
@@ -59,15 +74,15 @@ class PicoPagesList extends AbstractPicoPlugin
      *
      * @see    Pico::getTwig()
      * @see    DummyPlugin::onPageRendered()
-     * @param  Twig_Environment &$twig          twig template engine
-     * @param  array            &$twigVariables template variables
      * @param  string           &$templateName  file name of the template
+     * @param  array            &$twigVariables template variables
      * @return void
      */
-    public function onPageRendering(Twig_Environment &$twig, array &$twigVariables, &$templateName)
+    public function onPageRendering(string &$templateName, array &$twigVariables)
     {
+        $twig = $this->getPico()->getTwig();
         $twigVariables['nested_pages'] = $this->items;
-        
+
         $twig->addFilter(new Twig_SimpleFilter('navigation', function($pages) {
             return $this->output($pages);
         }));
@@ -124,7 +139,7 @@ class PicoPagesList extends AbstractPicoPlugin
                 $parent = $value;
                 break;
             }
-            
+
             $parent['_childs'][$part] = $value;
             $parent = &$parent['_childs'][$part];
         }
@@ -143,7 +158,7 @@ class PicoPagesList extends AbstractPicoPlugin
         $length = strlen($substr);
         return (substr($str, -$length) === $substr) ? substr($str, 0, -$length) : $str;
     }
-    
+
     /**
      * Filter the pages array according to given paths, as exclusive or inclusive.
      *
@@ -206,6 +221,8 @@ class PicoPagesList extends AbstractPicoPlugin
         $html = '<ul>';
         foreach ($pages as $pageID => $page)
         {
+            if (!empty($page['hidden'])) continue;
+
             $childsOutput = '';
             if(isset($page['_childs'])) {
                 $childsOutput = $this->output($page['_childs']);
@@ -233,4 +250,3 @@ class PicoPagesList extends AbstractPicoPlugin
         return $html;
     }
 }
-?>
