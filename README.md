@@ -2,9 +2,15 @@
 
 A flat and nested pages lists plugin for [Pico CMS](http://picocms.org).
 
-The plugin adds `{{ nested_pages }}` in addition to `{{ pages }}`, the filters `exclude` and `only` that filters page arrays and the filter `navigation` which render flat or nested HTML navigations with links and utility css classes.
+- `{{ nested_pages }}` array
+- nested or flat html navigations
+- pages links and directories structures
+- versatile html/css for dropdown menus, single-line breadcrumbs...
+- `exclude` and `only` pages filters
 
-![Examples](examples/capture.png)
+[![Examples](examples/capture.png)](http://pico.nliautaud.fr/PicoPagesList)
+
+Demo : http://pico.nliautaud.fr/PicoPagesList
 
 ## Installation
 
