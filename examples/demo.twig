@@ -1,98 +1,162 @@
-{#
-  Demo for PicoPagesList https://github.com/nliautaud/pico-pages-list
-  Place me in themes/mytheme/ and include me with {% include 'demo.twig' %}
-#}
-<h2>Demo for <a href="https://github.com/nliautaud/pico-pages-list">pico-pages-list</a></h2>
 <style>
   .grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
   }
-  .demo code {
-    font-family: inherit;
-    border: 1px solid silver;
-    border-radius: 3px;
-    background: transparent;
-    padding: 1px 3px 2px;
-    font-size: .8em;
+  .pageslist-demo .item {
+    border: 1px solid #eee;
+    border-radius: 4px;
+    overflow: hidden;
+    box-shadow: 0 0 5px #0001;
+    margin: 1em;
   }
-  .demo ul {
+  .pageslist-demo .item.span {
+    grid-column: 1 / span 2;
+  }
+  .pageslist-demo .desc {
+    background: #2EAE9B;
+    color: white;
+    font-size: .8em;
+    overflow: auto;
+  }
+  .pageslist-demo .desc p {
+    margin: 1em;
+  }
+  .pageslist-demo .desc code {
+    font-family: inherit;
+    border: none;
+    border-radius: 3px;
+    background: #456;
+    padding: .25em .5em;
+    margin: 1em;
+    display: block;
+    white-space: pre-wrap;
+    font-size: 1em;
+  }
+  .pageslist-demo ul {
     list-style: none;
     padding: 0;
+    margin: 1em;
   }
-  .demo ul ul {
+  .pageslist-demo ul ul {
     padding-left: 1.5em;
     margin: 0;
   }
-  .demo .is-active a {
+  .pageslist-demo .is-active a {
     font-style: italic;
   }
-  .demo .is-current a {
+  .pageslist-demo .is-current a {
     font-style: normal;
     font-weight: bold;
   }
-  .demo a::before,
-  .demo span::before {
+  .pageslist-demo a::before,
+  .pageslist-demo span::before {
     content: "▹";
     vertical-align: middle;
     margin-right: .5em;
     color: grey;
     font: normal 1.2em normal mono; 
   }
-  .demo .has-childs > a::before,
-  .demo .has-childs > span::before {
+  .pageslist-demo .has-childs > a::before,
+  .pageslist-demo .has-childs > span::before {
     content: "▾"; 
   }
 </style>
-<div class="demo">
+<div class="pageslist-demo">
   <div class="grid">
-    <div>
-      <code>{% raw %}{{ pages | navigation }}{% endraw %}</code>
+    <div class="item">
+      <div class="desc">
+        <p>Generate a flat navigation using the default page array.</p>
+        <code>{% raw %}{{ pages | navigation }}{% endraw %}</code>
+      </div>
       {{ pages | navigation }}
     </div>
-    <div>
-      <code>{% raw %}{{ nested_pages | navigation }}{% endraw %}</code>
+    <div class="item">
+      <div class="desc">
+        <p>Generate a nested navigation using the nested array.</p>
+        <code>{% raw %}{{ nested_pages | navigation }}{% endraw %}</code>
+      </div>
       {{ nested_pages | navigation }}
     </div>
-    <div>
-      <code>{% raw %}{{ nested_pages | exclude('doc') | navigation }}{% endraw %}</code>
-      {{ nested_pages | exclude('doc') | navigation }}
+    <div class="item span">
+      <div class="desc">
+        <p>The html structure and the css classes allows styling current page, active parent pages, naked directories,  getting pages by name, etc. to build any type of navigation : dropdown menus, single-lined breadcrumbs...
+        </p>
+        <code>{% raw %}.is-page, .is-directory, .is-current, .is-active, .has-childs ...{% endraw %}</code>
+      </div>
     </div>
-    <div>
-      <code>{% raw %}{{ nested_pages | exclude('doc/') | navigation }}{% endraw %}</code>
-      {{ nested_pages | exclude('doc/') | navigation }}
+    <div class="item">
+      <div class="desc">
+        <p>Filtering pages paths with the <i>exclude</i> filter : </p>
+        <code>{% raw %}{{ nested_pages | exclude('PicoPagesList') | navigation }}{% endraw %}</code>
+      </div>
+      {{ nested_pages | exclude('PicoPagesList') | navigation }}
     </div>
-    <div>
-      <code>{% raw %}{{ nested_pages | only('doc') | exclude('doc/sub/bar') | navigation }}{% endraw %}</code>
-      {{ nested_pages | only('doc') | exclude('doc/sub/bar') | navigation }}
+    <div class="item">
+      <div class="desc">
+        <p>Filter the inner pages by using a trailing slash : </p>
+        <code>{% raw %}{{ nested_pages | exclude('PicoPagesList/') | navigation }}{% endraw %}</code>
+      </div>
+      {{ nested_pages | exclude('PicoPagesList/') | navigation }}
     </div>
-    <div>
-      <code>{% raw %}{{ nested_pages | only('doc/sub', 'index') | navigation }}{% endraw %}</code>
-      {{ nested_pages | only('doc/sub', 'index') | navigation }}
+    <div class="item">
+      <div class="desc">
+        <p>Filter all pages except the given ones with <i>only</i>, and chain filters  : </p>
+        <code>{% raw %}{{ nested_pages | only('PicoPagesList') | exclude('PicoPagesList/sub/bar') | navigation }}{% endraw %}</code>
+      </div>
+      {{ nested_pages | only('PicoPagesList') | exclude('PicoPagesList/sub/bar') | navigation }}
+    </div>
+    <div class="item">
+      <div class="desc">
+        <p>Filters can be given multiple paths : </p>
+        <code>{% raw %}{{ nested_pages | only('PicoPagesList/sub', 'index') | navigation }}{% endraw %}</code>
+      </div>
+      {{ nested_pages | only('PicoPagesList/sub', 'index') | navigation }}
+    </div>
+    <div class="item span">
+      <div class="desc">
+        <p>Custom loop :</p>
+        <code>{% raw %}{% macro menu(items) %}
+    &#x3C;ul&#x3E;
+    {% for name,item in items %}
+        &#x3C;li&#x3E;
+            {% if item.url %}
+                &#x3C;a href=&#x22;{{ item.url }}&#x22;&#x3E;{{ item.title }}&#x3C;/a&#x3E; : {{ item.description }}
+            {% else %}
+                &#x3C;span&#x3E;{{ name }}&#x3C;/span&#x3E;
+            {% endif %}
+            {% if item._childs %}
+                {% import 'macros.twig' as macros %}
+                {{ macros.menu(item._childs) }}
+            {% endif %}
+        &#x3C;/li&#x3E;
+    {% endfor %}
+    &#x3C;/ul&#x3E;
+{% endmacro %}{% endraw %}</code>
+
+<code>{% raw %}{% import 'macros.twig' as macros %}
+{{ macros.menu(nested_pages) }}{% endraw %}</code>
+      </div>
+      {% macro menu(items) %}
+        <ul>
+        {% for name,item in items %}
+          <li>
+            {% if item.url %}
+              <a href="{{ item.url }}">{{ item.title }}</a> : {{ item.description }}
+            {% else %}
+              <span>{{ name }}</span>
+            {% endif %}
+            {% if item._childs %}
+              {% import _self as macros %}
+              {{ macros.menu(item._childs) }}
+            {% endif %}
+          </li>
+        {% endfor %}
+        </ul>
+      {% endmacro %}
+
+      {% import _self as macros %}
+      {{ macros.menu(nested_pages) }}
     </div>
   </div>
-
-  <hr>
-  <p>Custom loop :</p>
-
-  {% macro menu(items) %}
-    <ul>
-    {% for name,item in items %}
-      <li>
-        {% if item.url %}
-          <a href="{{ item.url }}">{{ item.title }}</a> : {{ item.description }}
-        {% else %}
-          <span>{{ name }}</span>
-        {% endif %}
-        {% if item._childs %}
-          {% import _self as macros %}
-          {{ macros.menu(item._childs) }}
-        {% endif %}
-      </li>
-    {% endfor %}
-    </ul>
-  {% endmacro %}
-
-  {% import _self as macros %}
-  {{ macros.menu(nested_pages) }}
 </div>
