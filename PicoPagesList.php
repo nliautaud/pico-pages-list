@@ -73,16 +73,11 @@ class PicoPagesList extends AbstractPicoPlugin
      * Triggered before Pico renders the page
      *
      * @see    Pico::getTwig()
-     * @see    DummyPlugin::onPageRendered()
-     * @param  string           &$templateName  file name of the template
-     * @param  array            &$twigVariables template variables
+     * @param  Twig_Environment &$twig Twig instance
      * @return void
      */
-    public function onPageRendering(string &$templateName, array &$twigVariables)
+    public function onTwigRegistered(Twig_Environment &$twig)
     {
-        $twig = $this->getPico()->getTwig();
-        $twigVariables['nested_pages'] = $this->items;
-
         $twig->addFilter(new Twig_SimpleFilter('navigation', function($pages) {
             return $this->output($pages);
         }));
@@ -94,6 +89,24 @@ class PicoPagesList extends AbstractPicoPlugin
         $twig->addFilter(new Twig_SimpleFilter('only', function($pages, array $paths = array()) {
             return $this->filterPages($pages, $paths, true);
         }, array('is_variadic' => true)));
+    }
+
+    /**
+     * Register `$this` in the Twig `{{ PagesList }}` variable.
+     *
+     * Triggered before Pico renders the page
+     *
+     * @see    Pico::getTwig()
+     * @see    DummyPlugin::onPageRendered()
+     * @param  string           &$templateName  file name of the template
+     * @param  array            &$twigVariables template variables
+     * @return void
+     */
+
+    public function onPageRendering(string &$templateName, array &$twigVariables)
+    {
+        $twig = $this->getPico()->getTwig();
+        $twigVariables['nested_pages'] = $this->items;
     }
 
     /**
