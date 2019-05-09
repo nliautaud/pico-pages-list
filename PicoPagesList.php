@@ -70,7 +70,6 @@ class PicoPagesList extends AbstractPicoPlugin
     /**
      * Register `$this` in the Twig `{{ PagesList }}` variable.
      *
-     * Triggered before Pico renders the page
      *
      * @see    Pico::getTwig()
      * @param  Twig_Environment &$twig Twig instance
@@ -105,7 +104,6 @@ class PicoPagesList extends AbstractPicoPlugin
 
     public function onPageRendering(string &$templateName, array &$twigVariables)
     {
-        $twig = $this->getPico()->getTwig();
         $twigVariables['nested_pages'] = $this->items;
     }
 
