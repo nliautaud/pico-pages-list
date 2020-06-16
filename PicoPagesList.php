@@ -21,8 +21,8 @@
 class PicoPagesList extends AbstractPicoPlugin
 {
     const API_VERSION = 2;
-    public $items;
-    private $currentPagePath;
+
+    protected $items;
 
     /**
      * Construct the nested pages array.
@@ -39,32 +39,6 @@ class PicoPagesList extends AbstractPicoPlugin
     public function onPagesLoaded(array &$pages)
     {
         $this->items = $this->nestedPages($pages);
-    }
-
-
-    /**
-     * Store the current url.
-     *
-     * Triggered after Pico has found the current page and possible siblings
-     *
-     * See {@link DummyPlugin::onSinglePageLoaded()} for details about the
-     * structure of the page data.
-     *
-     * @see    Pico::getCurrentPage()
-     * @see    Pico::getPreviousPage()
-     * @see    Pico::getNextPage()
-     * @param  array|null &$currentPage  data of the page being served
-     * @param  array|null &$previousPage data of the previous page
-     * @param  array|null &$nextPage     data of the next page
-     * @return void
-     */
-    protected function onCurrentPageDiscovered(
-        array &$currentPage = null,
-        array &$previousPage = null,
-        array &$nextPage = null
-    ) {
-        $base_url = $this->getConfig('base_url');
-        $this->currentPagePath = str_replace(array('?', $base_url), '', urldecode($currentPage['url']));
     }
 
     /**
@@ -202,6 +176,7 @@ class PicoPagesList extends AbstractPicoPlugin
         }
         return $isInclusive ? $inclusiveOutput : $pages;
     }
+
     /**
      * Return if the given path is a subpath of the given parent path(s)
      *
@@ -241,19 +216,27 @@ class PicoPagesList extends AbstractPicoPlugin
 
             $url = isset($page['url']) ? $page['url'] : false;
 
-            // use title if the page have one, and make a link if the page exists.
+            // use title if the page has one and make a link if the page exists.
             if(!$url) $item = "<span>$pageID</span>";
             else {
                 $name = !empty($page['title']) ? $page['title'] : $pageID;
                 $item = "<a href=\"$url\">$name</a>";
             }
 
-            // add the pageID in class, and indicates if is current or parent of current
+            // add the pageID in class and indicate if it is the current or parent of the current page.
             $class = $pageID;
             $class .= $url ? ' is-page' : ' is-directory';
             if ($childsOutput) $class .= ' has-childs';
-            if ($this->currentPagePath == $page['id']) $class .= ' is-current';
-            if (strpos($this->currentPagePath, $page['id']) === 0) $class .= ' is-active';
+            
+            $currentPage = $this->getCurrentPage();
+            if ($currentPage && $currentPage['id']) {
+                if ($currentPage['id'] === $page['id']) {
+                    $class .= ' is-current is-active';
+                } elseif ($currentPage['id'] !== 'index') {
+                    $currentPagePath = (basename($currentPage['id']) === 'index') ? dirname($currentPage['id']) . '/' : $currentPage['id'] . '/';
+                    if (substr($page['id'], 0, strlen($currentPagePath)) === $currentPagePath) $class .= ' is-active';
+                }
+            }
 
             $html .= "<li class=\"$class\">$item$childsOutput</li>";
         }
