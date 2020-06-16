@@ -20,7 +20,7 @@
  */
 class PicoPagesList extends AbstractPicoPlugin
 {
-    const API_VERSION = 2;
+    const API_VERSION = 3;
 
     protected $items;
 
@@ -53,7 +53,7 @@ class PicoPagesList extends AbstractPicoPlugin
     {
         $twig->addFilter(new Twig_SimpleFilter('navigation', function($pages) {
             return $this->output($pages);
-        }));
+        }, array('is_safe' => array('html'))));
 
         $twig->addFilter(new Twig_SimpleFilter('exclude', function($pages, array $paths = array()) {
             return $this->filterPages($pages, $paths);
@@ -75,7 +75,6 @@ class PicoPagesList extends AbstractPicoPlugin
      * @param  array            &$twigVariables template variables
      * @return void
      */
-
     public function onPageRendering(string &$templateName, array &$twigVariables)
     {
         $twigVariables['nested_pages'] = $this->items;
@@ -227,14 +226,14 @@ class PicoPagesList extends AbstractPicoPlugin
             $class = $pageID;
             $class .= $url ? ' is-page' : ' is-directory';
             if ($childsOutput) $class .= ' has-childs';
-            
-            $currentPage = $this->getCurrentPage();
+
+            $currentPage = $this->getPico()->getCurrentPage();
             if ($currentPage && $currentPage['id']) {
                 if ($currentPage['id'] === $page['id']) {
                     $class .= ' is-current is-active';
-                } elseif ($currentPage['id'] !== 'index') {
-                    $currentPagePath = (basename($currentPage['id']) === 'index') ? dirname($currentPage['id']) . '/' : $currentPage['id'] . '/';
-                    if (substr($page['id'], 0, strlen($currentPagePath)) === $currentPagePath) $class .= ' is-active';
+                } elseif ($page['id'] !== 'index') {
+                    $pagePath = (basename($page['id']) === 'index') ? dirname($page['id']) . '/' : $page['id'] . '/';
+                    if (substr_compare($pagePath, $currentPage['id'], 0, strlen($pagePath)) === 0) $class .= ' is-active';
                 }
             }
 
