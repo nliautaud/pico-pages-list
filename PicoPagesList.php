@@ -25,6 +25,47 @@ class PicoPagesList extends AbstractPicoPlugin
     protected $items;
 
     /**
+     * Triggered when Pico reads its known meta header fields
+     *
+     * @see    Pico::getMetaHeaders()
+     * @param  string[] &$headers list of known meta header
+     *     fields; the array key specifies the YAML key to search for, the
+     *     array value is later used to access the found value
+     * @return void
+     */
+    public function onMetaHeaders(array &$headers)
+    {
+        $headers['Placing'] = 'placing';
+    }
+
+    /**
+     * Triggered when Pico reads a single page from the list of all known pages
+     *
+     * The `$pageData` parameter consists of the following values:
+     *
+     * | Array key      | Type   | Description                              |
+     * | -------------- | ------ | ---------------------------------------- |
+     * | id             | string | relative path to the content file        |
+     * | url            | string | URL to the page                          |
+     * | title          | string | title of the page (YAML header)          |
+     * | description    | string | description of the page (YAML header)    |
+     * | author         | string | author of the page (YAML header)         |
+     * | time           | string | timestamp derived from the Date header   |
+     * | date           | string | date of the page (YAML header)           |
+     * | date_formatted | string | formatted date of the page               |
+     * | raw_content    | string | raw, not yet parsed contents of the page |
+     * | meta           | string | parsed meta data of the page             |
+     *
+     * @see    DummyPlugin::onPagesLoaded()
+     * @param  array &$pageData data of the loaded page
+     * @return void
+     */
+    public function onSinglePageLoaded(array &$pageData)
+    {
+        $pageData['placing'] = $pageData['meta']['placing'] ?? $pageData['title'];
+    }
+
+    /**
      * Construct the nested pages array.
      *
      * Triggered after Pico has read all known pages
@@ -38,6 +79,18 @@ class PicoPagesList extends AbstractPicoPlugin
      */
     public function onPagesLoaded(array &$pages)
     {
+        if ($config['page_order_by'] = 'placing') {
+
+            $sorted_pages = array();
+
+            foreach ($pages as $page) {
+                $folder = substr($page['id'], 0, strrpos($page['id'], '/'));
+                $sorted_pages[$folder . '-' . $page['placing']] = $page;
+            }
+
+            ksort($sorted_pages);
+            $pages = $sorted_pages;
+        }
         $this->items = $this->nestedPages($pages);
     }
 
@@ -243,3 +296,4 @@ class PicoPagesList extends AbstractPicoPlugin
         return $html;
     }
 }
+
