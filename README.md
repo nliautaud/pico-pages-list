@@ -152,3 +152,7 @@ The lists are sorted according to the default settings in Pico `config.php`.
 pages_order_by: date
 pages_order: desc
 ```
+
+## Acknowledgements
+
+Includes functionality and code inspired by [PicoPlacing](https://github.com/ufgum/Pico-Placing).
