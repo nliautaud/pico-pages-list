@@ -79,6 +79,7 @@ class PicoPagesList extends AbstractPicoPlugin
      */
     public function onPagesLoaded(array &$pages)
     {
+        $aux = $pages;
         if ($config['page_order_by'] = 'placing') {
 
             $sorted_pages = array();
@@ -89,9 +90,9 @@ class PicoPagesList extends AbstractPicoPlugin
             }
 
             ksort($sorted_pages);
-            $pages = $sorted_pages;
+            $aux = $sorted_pages;
         }
-        $this->items = $this->nestedPages($pages);
+        $this->items = $this->nestedPages($aux);
     }
 
     /**
