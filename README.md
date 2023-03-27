@@ -10,8 +10,6 @@ A flat and nested pages lists plugin for [Pico CMS](http://picocms.org).
 
 [![Examples](examples/capture.png)](http://pico.nliautaud.fr/PicoPagesList)
 
-Demo : http://pico.nliautaud.fr/PicoPagesList
-
 ## Installation
 
 Copy `PicoPagesList.php` to the `plugins` directory of your Pico Project.
